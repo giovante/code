@@ -1,0 +1,393 @@
+**We are to Import The Necessary Libraries**                           
+We would be importing the numerical and tensorflow libraries for a smooth building of our model
+
+import numpy as np
+import tensorflow as tf
+from tensorflow.keras import Model
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense, Flatten, Conv2D, AveragePooling2D
+
+
+We are Downloading the Dataset in the step below
+We would be Loading MNIST and splitting into training and testing datasets
+
+mnist = tf.keras.datasets.mnist
+(x_train, y_train),(x_test, y_test) = mnist.load_data()
+
+Reshaping image dimensions
+Due to its Flattend 28 x 28 = 784image, we are to recover our original image from the 784-d vector, we simply reshape the array into a 28 x 28 image.
+
+x_train = x_train.reshape(x_train.shape[0], 28, 28, 1)
+x_test = x_test.reshape(x_test.shape[0], 28, 28, 1)
+
+
+Normalization
+We will convert the data into float32 and normalize the pixels as well so that they fall in the range [0.0, 255.0]. Finally, we will one-hot encode the labels which will range from 0 to 9.
+
+x_train = x_train.astype('float32')
+x_test = x_test.astype('float32')
+x_train = x_train / 255.0
+x_test = x_test / 255.0
+
+
+Model Building
+
+Now we are Defining a custom LeNet module
+LeNet consists of 7 layers – 2 convolutional and 2 average pooling layers, and then 2 fully connected layers and the output layer with activation function softmax.
+
+NOTE: MNIST images dimensions are 28 × 28 pixels, but they are zero-padded to 32 × 32 pixels and normalized before being fed forward to the network. Input image shrinks further down the network.
+
+
+model = Sequential()
+model.add(Conv2D(filters=6, kernel_size=(3, 3), activation='tanh', input_shape=(28,28,1)))
+model.add(AveragePooling2D())
+model.add(Conv2D(filters=16, kernel_size=(3, 3), activation='tanh'))
+model.add(AveragePooling2D())
+model.add(Flatten())
+model.add(Dense(units=128, activation='tanh'))
+model.add(Dense(units=10, activation = 'softmax'))
+model.summary()
+
+
+Model compilation
+We will be using the 'adam' optimizer and the loss is going to be sparse_categorical_crossentropy.
+
+model.compile(optimizer='adam',
+              loss='sparse_categorical_crossentropy',
+              metrics=['accuracy'])
+
+
+The training and testing of the algorithms
+Fitting the model
+We will train the model for 10 epochs
+
+model.fit(x_train, y_train, 
+          epochs=10, 
+          validation_data=(x_test, y_test))
+
+Test the Model
+Let's Test Our Model
+
+loss, acc = model.evaluate(x_test, y_test)
+print('ACCURACY: ', acc)
+
+Model prediction
+Let's do a model prediction to see how well the model would perform.
+
+predictions = model.predict(x_test)
+print(np.argmax(predictions[0]))
+
+
+Below, are the steps we would be taking using the AlexNet algorithm.
+
+Starting The AlexNet Algorithm
+
+• Introduction
+
+The aim of this experiment is to demonstrate the architecture of the AlexNet model in building our convolutional neural network.
+
+AlexNet architecture consists of 5 convolution layers and 3 fully connected layers and Relu will be used as the activation, except at the output which will be softmax.
+
+Import the Required Libraries
+These libraries are relevant for us to have a good start with building our convolutional neural network on the AlexNet algorithm.
+
+• Algorithmic performance evaluation and comparison
+
+
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+%matplotlib inline
+
+Let's download the MNIST dataset                                         
+The MNIST dataset will be downloaded as we import these libraries below. 
+from keras.datasets import mnist
+from keras.models import Sequential
+from keras.layers import Dense, Dropout, Activation, Flatten
+from keras.optimizers import Adam
+from keras.layers.normalization import BatchNormalization
+from keras.utils import np_utils
+from keras.layers import Conv2D, MaxPooling2D, ZeroPadding2D, GlobalAveragePooling2D
+# from keras.layers.advanced_activations import LeakyReLU
+from keras.preprocessing.image import ImageDataGenerator
+
+
+This step is to load the image data
+
+We would be Loading MNIST dataset and splitting into training and testing datasets accordingly.
+
+(X_train, y_train), (X_test, y_test) = mnist.load_data()
+
+Let's verify what the dataset looks like
+To verify that the dataset looks correct, let's plot the first 25 images from the training set.
+
+class_names = ['0', '1', '2', '3', '4',
+               '5', '6', '7', '8', '9']
+plt.figure(figsize=(10,10))
+for i in range(25):
+    plt.subplot(5,5,i+1)
+    plt.xticks([])
+    plt.yticks([])
+    plt.grid(False)
+    plt.imshow(X_train[i], cmap=plt.cm.binary)
+    # The CIFAR labels happen to be arrays, 
+    # which is why you need the extra index
+      
+   
+plt.show()
+
+
+From the step below, We will see that X_train is (60000, 28, 28), so that we have 60000 training images, each with a 28*28 resolution.
+I will also be doing a Pre-processing of the data into desired format.
+
+Reshaping The data into (batch, height, width, channels)
+
+X_train = X_train.reshape(60000, 28, 28, 1)
+X_test = X_test.reshape(10000, 28, 28, 1)
+
+From the output above, We could see that we have 60000 training images and 10000 testing images.
+
+Where X_train = Training Images
+X_test = Test Images.
+
+Data Normalization
+We are Normalizing The data to float between 0 and 1 below.
+Original pixel values are between 0 and 255
+
+X_train = X_train.astype('float32')
+X_test = X_test.astype('float32')
+X_train = X_train / 255
+X_test = X_test / 255
+
+For y_ train and y_test data, we want to convert them into categorical / one-hot variables below. In our case, we have 10 categories.
+keras.utils.np_utils conveniently has this built in.
+
+classes = 10
+y_train = np_utils.to_categorical(y_train, classes)
+y_test = np_utils.to_categorical(y_test, classes)
+
+Let's Verify the dimension after one hot encoding
+This is for us to be sure our data dimension is still intact after the convertion.
+
+print((X_train.shape,y_train.shape))
+print((X_test.shape,y_test.shape))
+
+
+Building The Neural Network
+Instantiate a Sequential model
+
+In the step below, we would have to define the AlexNet network. The parameters of the network will be kept according to the descriptions below, that is 5 convolutional layers with kernel size 3 x 3, 3 x 3, 3 x 3 respectively, 3 fully connected layers, ReLU as an activation function at all layers except at the output layer, Also with an input shape of 28 x 28.
+Since we will test this model in MNIST classification, at the output layer we will define a Dense layer with 10 nodes.
+
+model = Sequential()
+
+# 1st Convolutional Layer
+model.add(Conv2D(filters=32, input_shape=(28, 28, 1), kernel_size=(3, 3), strides=(1, 1), padding='valid'))
+model.add(Activation('relu'))
+# Max Pooling
+model.add(MaxPooling2D(pool_size=(3, 3), strides=(1, 1), padding='valid'))
+
+# 2nd Convolutional Layer
+model.add(Conv2D(filters=32, kernel_size=(3, 3), strides=(1, 1), padding='valid'))
+model.add(Activation('relu'))
+# Max Pooling
+model.add(MaxPooling2D(pool_size=(3, 3), strides=(1, 1), padding='valid'))
+
+# 3rd Convolutional Layer
+model.add(Conv2D(filters=64, kernel_size=(3, 3), strides=(1, 1), padding='valid'))
+model.add(Activation('relu'))
+
+# 4th Convolutional Layer
+model.add(Conv2D(filters=64, kernel_size=(3, 3), strides=(1, 1), padding='valid'))
+model.add(Activation('relu'))
+
+# 5th Convolutional Layer
+model.add(Conv2D(filters=64, kernel_size=(3, 3), strides=(1, 1), padding='valid'))
+model.add(Activation('relu'))
+
+# Max Pooling
+model.add(MaxPooling2D(pool_size=(3, 3), strides=(2, 2), padding='valid'))
+
+# Fully Connected layer
+model.add(Flatten())
+# 1st Fully Connected Layer
+model.add(Dense(512))
+model.add(BatchNormalization())
+model.add(Activation('relu'))
+# Add Dropout to prevent overfitting
+model.add(Dropout(0.3))
+
+# 2nd Fully Connected Layer
+model.add(Dense(512))
+model.add(BatchNormalization())
+model.add(Activation('relu'))
+# Add Dropout to prevent overfitting
+model.add(Dropout(0.3))
+
+# 3rd Fully Connected Layer
+model.add(Dense(512))
+model.add(BatchNormalization())
+model.add(Activation('relu'))
+# Add Dropout to prevent overfitting
+model.add(Dropout(0.3))
+
+# Output Layer
+# important to have dense 10, since we have 10 classes
+model.add(Dense(10))
+model.add(BatchNormalization())
+model.add(Activation('softmax'))
+
+model.summary()
+
+
+Let's Compile The Model
+Now that our model is defined, we will compile this model and use adam as an optimizer.
+
+
+model.compile(loss='categorical_crossentropy',
+              optimizer='adam',
+              metrics=['accuracy'])
+
+We would use ImageDataGenerator below to augment our input data which will help us reduce overfitting.
+
+gen = ImageDataGenerator(
+            rotation_range=8,
+            width_shift_range=0.08,
+            shear_range=0.3,
+            height_shift_range=0.08,
+            zoom_range=0.08
+            )
+test_gen = ImageDataGenerator()
+
+After preprocessing the MNIST dataset, the next is for us to train our defined AlexNet model.
+The learning rate annealer will be used in this experiment.The learning rate annealer decreases the learning rate after a certain number of epochs if the error rate does not change.
+Through this technique, the validation accuracy will be monitored and if it seems to be a plateau in 3 epochs, it will reduce the learning rate by 0.01. 
+
+from keras.callbacks import ReduceLROnPlateau
+lrr= ReduceLROnPlateau(   monitor='val_acc',   factor=.01,   patience=3,  min_lr=1e-5) 
+
+We would train our model by defining below the number of epochs, the number of batches and the learning rate. 
+
+BATCH_SIZE = 64
+
+EPOCHS = 5
+
+# Generator to "flow" in the input images and labels into our model
+# Takes batch_size as a parameter
+train_generator = gen.flow(X_train, y_train, batch_size=BATCH_SIZE)
+test_generator = test_gen.flow(X_test, y_test, batch_size=BATCH_SIZE)
+
+The training and testing of the algorithms
+
+Now we are Training The Model
+The Model is being trained with 5 epochs and batch size of 64.
+
+
+model.fit_generator(
+        train_generator,
+        steps_per_epoch=60000//BATCH_SIZE,
+        epochs=EPOCHS,
+        validation_data=test_generator,
+        validation_steps=10000//BATCH_SIZE
+        )
+
+After a Successful training above, we would visualize its Performance in the step below.
+
+import matplotlib.pyplot as plt
+#Plotting the training and validation loss
+
+f,ax=plt.subplots(2,1) #Creates 2 subplots under 1 column
+
+#Assigning the first subplot to graph training loss and validation loss
+ax[0].plot(model.history.history['loss'],color='b',label='Training Loss')
+ax[0].plot(model.history.history['val_loss'],color='r',label='Validation Loss')
+
+#Plotting the training accuracy and validation accuracy
+ax[1].plot(model.history.history['accuracy'],color='b',label='Training  Accuracy')
+ax[1].plot(model.history.history['val_accuracy'],color='r',label='Validation Accuracy')
+
+plt.legend()
+
+The classification performance will be seen using a non-normalized and a normalized confusion matrices. At this point, we will define a function below, through which the confusion matrices will be plotted. 
+
+#Defining function for confusion matrix plot
+def plot_confusion_matrix(y_true, y_pred, classes,
+                          normalize=False,
+                          title=None,
+                          cmap=plt.cm.Blues):
+    if not title:
+        if normalize:
+            title = 'Normalized confusion matrix'
+        else:
+            title = 'Confusion matrix, without normalization'
+
+    # Compute confusion matrix
+    cm = confusion_matrix(y_true, y_pred)
+    if normalize:
+        cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
+        print("Normalized confusion matrix")
+    else:
+        print('Confusion matrix, without normalization')
+
+#Print Confusion matrix
+    fig, ax = plt.subplots(figsize=(7,7))
+    im = ax.imshow(cm, interpolation='nearest', cmap=cmap)
+    ax.figure.colorbar(im, ax=ax)
+    # We want to show all ticks...
+    ax.set(xticks=np.arange(cm.shape[1]),
+           yticks=np.arange(cm.shape[0]),
+           xticklabels=classes, yticklabels=classes,
+           title=title,
+           ylabel='True label',
+           xlabel='Predicted label')
+
+    # Rotate the tick labels and set their alignment.
+    plt.setp(ax.get_xticklabels(), rotation=45, ha="right",
+             rotation_mode="anchor")
+    # Loop over data dimensions and create text annotations.
+    fmt = '.2f' if normalize else 'd'
+    thresh = cm.max() / 2.
+    for i in range(cm.shape[0]):
+        for j in range(cm.shape[1]):
+            ax.text(j, i, format(cm[i, j], fmt),
+                    ha="center", va="center",
+                    color="white" if cm[i, j] > thresh else "black")
+    fig.tight_layout()
+    return ax
+
+np.set_printoptions(precision=2)
+
+At this point, we would be doing some Model Predictions in the following steps below.
+We would predict the class labels for the test images on the trained AlexNet model.
+
+#Making prediction
+y_pred=model.predict_classes(X_test)
+y_true=np.argmax(y_test,axis=1)
+
+#Plotting the confusion matrix
+from sklearn.metrics import confusion_matrix
+confusion_mtx=confusion_matrix(y_true,y_pred)
+
+class_names=['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
+
+# Plotting non-normalized confusion matrix
+plot_confusion_matrix(y_true, y_pred, classes = class_names,title = 'Confusion matrix, without normalization')
+
+
+# Plotting normalized confusion matrix
+plot_confusion_matrix(y_true, y_pred, classes=class_names, normalize=True, title='Normalized confusion matrix')
+
+Let's Test Our Model
+
+#Classification accuracy
+from sklearn.metrics import accuracy_score
+acc_score = accuracy_score(y_true, y_pred)
+print('Accuracy Score = ', acc_score)
+
+from keras.models import load_model
+
+model.save('LeNet-AlexNet-MNIST')
+
+
+
+
